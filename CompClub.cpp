@@ -88,8 +88,10 @@ int CompClub::WaitForTable(const std::string &name, const std::string &time){
     auto found_client = std::find_if(clients.begin(), clients.end(), [name](const Client& client){
         return client.name == name;
     });
+    if (found_client == clients.end()) return -1;
     for (const auto &table: tables){
         if (table.free){
+            queue_to_sit.push(&(*found_client));
             return 5; // ICanWaitNoLonger!
         }
     }
@@ -111,6 +113,8 @@ int CompClub::RemoveClient(const std::string & cli_left, const std::string &time
     if ( found_client == clients.end()){
         return -3; //ClientUnknown
     }
+    if (found_client->table > 0)
+    {
     if (queue_to_sit.empty()){
         tables[found_client->table-1].free = true;
 
@@ -136,6 +140,11 @@ int CompClub::RemoveClient(const std::string & cli_left, const std::string &time
         queue_to_sit.pop();
         clients.erase(found_client);
         return -2; // ID 12
+    }
+    }
+    else
+    {
+        clients.erase(found_client);
     }
     
     return -1;
