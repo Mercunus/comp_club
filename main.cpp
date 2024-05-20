@@ -18,6 +18,8 @@ int main() {
         
         std::getline(in, line);
         int number_of_tables = stoi(line);
+        int found_r = line.find('\r');
+        if (found_r > 0 && found_r < line.size()) line.replace(found_r, 1, "");
         if (!std::regex_match(line, num_pattern))
         {
             std::cout << line << std::endl;
@@ -26,6 +28,8 @@ int main() {
 
         std::getline(in, line, ' ');
         std::string start_time = line;
+        found_r = line.find('\r');
+        if (found_r > 0 && found_r < line.size()) line.replace(found_r, 1, "");
         if (!std::regex_match(line, time_pattern))
         {
             std::cout << line << std::endl;
@@ -34,7 +38,8 @@ int main() {
 
         std::getline(in, line);
         std::string end_time = line;
-
+        found_r = line.find('\r');
+        if (found_r > 0 && found_r < line.size()) line.replace(found_r, 1, "");
         if (!std::regex_match(line, time_pattern))
         {
             std::cout << line << std::endl;
@@ -43,6 +48,8 @@ int main() {
 
         std::getline(in, line);
         int cost_of_hour = stoi(line);
+        found_r = line.find('\r');
+        if (found_r > 0 && found_r < line.size()) line.replace(found_r, 1, "");
         if (!std::regex_match(line, num_pattern))
         {
             std::cout << line << std::endl;
