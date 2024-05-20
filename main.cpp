@@ -5,19 +5,22 @@
 #include <iostream>
 #include <regex>
 
-int main() {
+int main(int argc, char *argv[]) {
 
+    if (argc == 1) {
+        std::cout << "NeedATextFile" << std::endl;
+        return 0; 
+    }
     std::regex time_pattern{"[0-9]{2}:[0-9]{2}"};
-    std::regex names_pattern{"[a-z0-9_]+"};
+    std::regex names_pattern{"[a-z0-9_/-]+"};
     std::regex num_pattern{"[0-9]+"};
-
+    std::ifstream in{argv[1]};
     std::string line;
-    std::ifstream in{"test_file.txt"};
+    //std::ifstream in{"test_file.txt"};
     if (in.is_open())
     {
         
         std::getline(in, line);
-        int number_of_tables = stoi(line);
         int found_r = line.find('\r');
         if (found_r > 0 && found_r < line.size()) line.replace(found_r, 1, "");
         if (!std::regex_match(line, num_pattern))
@@ -25,29 +28,24 @@ int main() {
             std::cout << line << std::endl;
             return(0);
         }
+        int number_of_tables = stoi(line);
 
         std::getline(in, line, ' ');
+        found_r = line.find('\r');
+        if (found_r > 0 && found_r < line.size()) line.replace(found_r, 1, "");
         std::string start_time = line;
+        
+        std::getline(in, line);
         found_r = line.find('\r');
         if (found_r > 0 && found_r < line.size()) line.replace(found_r, 1, "");
-        if (!std::regex_match(line, time_pattern))
-        {
-            std::cout << line << std::endl;
-            return(0);
-        }
-
-        std::getline(in, line);
         std::string end_time = line;
-        found_r = line.find('\r');
-        if (found_r > 0 && found_r < line.size()) line.replace(found_r, 1, "");
-        if (!std::regex_match(line, time_pattern))
+        if (!std::regex_match(start_time, time_pattern) || !std::regex_match(end_time, time_pattern))
         {
-            std::cout << line << std::endl;
+            std::cout << start_time << " " << end_time << std::endl;
             return(0);
         }
 
         std::getline(in, line);
-        int cost_of_hour = stoi(line);
         found_r = line.find('\r');
         if (found_r > 0 && found_r < line.size()) line.replace(found_r, 1, "");
         if (!std::regex_match(line, num_pattern))
@@ -55,6 +53,7 @@ int main() {
             std::cout << line << std::endl;
             return(0);
         }
+        int cost_of_hour = stoi(line);
         std::vector<std::string> parsed_lines{};
         int curr_time = 0;
         while (std::getline(in, line))
