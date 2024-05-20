@@ -3,31 +3,92 @@
 #include <sstream>
 #include <ctime>
 #include <iostream>
+#include <regex>
 
-int main(){
+int main() {
+
+    std::regex time_pattern{"[0-9]{2}:[0-9]{2}"};
+    std::regex names_pattern{"[a-z0-9_]+"};
+    std::regex num_pattern{"[0-9]+"};
+
     std::string line;
-    std::ifstream in("test_file.txt");
+    std::ifstream in{"test_file.txt"};
     if (in.is_open())
     {
         
         std::getline(in, line);
         int number_of_tables = stoi(line);
+        if (!std::regex_match(line, num_pattern))
+        {
+            std::cout << line << std::endl;
+            return(0);
+        }
 
         std::getline(in, line, ' ');
         std::string start_time = line;
+        if (!std::regex_match(line, time_pattern))
+        {
+            std::cout << line << std::endl;
+            return(0);
+        }
 
         std::getline(in, line);
         std::string end_time = line;
 
+        if (!std::regex_match(line, time_pattern))
+        {
+            std::cout << line << std::endl;
+            return(0);
+        }
 
         std::getline(in, line);
         int cost_of_hour = stoi(line);
+        if (!std::regex_match(line, num_pattern))
+        {
+            std::cout << line << std::endl;
+            return(0);
+        }
+        std::vector<std::string> parsed_lines{};
+        int curr_time = 0;
+        while (std::getline(in, line))
+        {
+            std::string word;
+            std::vector<std::string> words;
+            std::stringstream file_read{line};
+            while (std::getline(file_read, word, ' '))
+            {
+                int found_r = word.find('\r');
+                if (found_r < word.size()) word.replace(found_r, 1, "");
+                words.push_back(word);
+            }
+
+            if (words.size() < 3 ||
+                !std::regex_match(words[0], time_pattern) ||
+                !std::regex_match(words[1], num_pattern) ||
+                !std::regex_match(words[2], names_pattern))
+            {
+                std::cout << line << std::endl;
+                return(0);
+            }
+
+            if (words.size() == 4 && !std::regex_match(words[3], num_pattern))
+            {
+                std::cout << line << std::endl;
+                return(0);
+            }
+            if (curr_time > prepare_time(words[0]))
+            {
+                std::cout << line << std::endl;
+                return(0);
+            }
+            curr_time = prepare_time(words[0]);
+            parsed_lines.push_back(line);
+        }
 
         Logger logger{};
-
         CompClub club{start_time, end_time, cost_of_hour, number_of_tables, logger};
 
-        while (std::getline(in, line))
+        for (const auto& line: parsed_lines)
         {
             std::cout << line << std::endl;
             std::stringstream file_read{line};

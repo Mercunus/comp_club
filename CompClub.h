@@ -5,6 +5,8 @@
 #include <queue>
 #include <string>
 
+int prepare_time (const std::string &got_time);
+
 struct Client
 {
     std::string name;

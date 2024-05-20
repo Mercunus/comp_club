@@ -67,8 +67,6 @@ int CompClub::SitClient(const std::string & cli_name, const std::string &cli_tab
 
             int hours = dur_cur / 60;
             if (dur_cur % 60) hours += 1;
-            std::cout << "money: " << cost_per_hour * hours << std::endl;
-            std::cout << "dur: " << print_time(dur_cur) << std::endl;
             tables[found_client->table - 1].earned_money += cost_per_hour * hours;
         }
         if (!queue_to_sit.empty() && queue_to_sit.front()->name == cli_name)
@@ -119,8 +117,6 @@ int CompClub::RemoveClient(const std::string & cli_left, const std::string &time
         int dur_cur = prepare_time(time) - tables[found_client->table - 1].acquire_time;
         int hours = dur_cur / 60;
         if (dur_cur % 60) hours += 1;
-        std::cout << "money: " << cost_per_hour * hours << std::endl;
-        std::cout << "dur: " << print_time(dur_cur) << std::endl;
         tables[(found_client->table)-1].duration += dur_cur;
         tables[found_client->table - 1].earned_money += cost_per_hour * hours;
 
@@ -131,8 +127,6 @@ int CompClub::RemoveClient(const std::string & cli_left, const std::string &time
         int dur_cur = prepare_time(time) - tables[found_client->table - 1].acquire_time;
         int hours = dur_cur / 60;
         if (dur_cur % 60) hours += 1;
-        std::cout << "money: " << cost_per_hour * hours << std::endl;
-        std::cout << "dur: " << print_time(dur_cur) << std::endl;
         tables[found_client->table - 1].earned_money += cost_per_hour * hours;
         tables[(found_client->table)-1].duration += dur_cur;
 
@@ -158,8 +152,9 @@ void CompClub::Close(){
         RemoveClient(name.name, print_time(end_time));
     }
     std::cout << print_time(end_time) << std::endl;
-    for (const auto &table: tables) {
-        std::cout << table.earned_money << ' ' << print_time(table.duration) << std::endl;
+    for (unsigned i = 1; const auto &table: tables) {
+        std::cout << i << ' ' << table.earned_money << ' ' << print_time(table.duration) << std::endl;
+        ++i;
     }
 }
 
