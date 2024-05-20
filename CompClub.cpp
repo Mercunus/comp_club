@@ -147,9 +147,9 @@ void CompClub::Close(){
     std::sort(clients.begin(), clients.end(), [](const Client& client1, const Client& client2){
     return client1.name < client2.name;
     });
-    for (const auto &name: clients) {
-        std::cout << print_time(end_time) << " 11 " << name.name << std::endl;
-        RemoveClient(name.name, print_time(end_time));
+    while (clients.size() > 0) {
+        std::cout << print_time(end_time) << " 11 " << clients.begin()->name << std::endl;
+        RemoveClient(clients.begin()->name, print_time(end_time));
     }
     std::cout << print_time(end_time) << std::endl;
     for (unsigned i = 1; const auto &table: tables) {
