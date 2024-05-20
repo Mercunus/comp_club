@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <string>
+#include <cstring>
 #include <sstream>
 
 int prepare_time (const std::string &got_time){
@@ -32,27 +33,134 @@ std::string print_time(int time_in_minutes) {
 CompClub::~CompClub()
 {
 }
-int CompClub::AddClient(const std::string & cli_name) {
-    if (std::find(clients.begin(), clients.end(), cli_name) == clients.end()){
-        clients.push_back(cli_name);
+int CompClub::AddClient(const std::string & cli_name, const std::string &cli_time) {
+    if ((prepare_time(cli_time) < (this->start_time)) || (prepare_time(cli_time) > (this->end_time))){
+        return 2; //NotOpenYet
+    }
+
+    if (std::find_if(clients.begin(), clients.end(), [cli_name](const Client& client){
+        return client.name == cli_name;
+    }) == clients.end()){
+        clients.push_back({cli_name, -1});
     }
     else {
-       
-        return 13;
+        return 1; //YouShallNotPass
     }
-    return 0;
+    return -1;
 }
-void CompClub::SitClient(const std::string & cli_sit) {
+int CompClub::SitClient(const std::string & cli_name, const std::string &cli_table, const std::string &time) {
+    auto found_client = std::find_if(clients.begin(), clients.end(), [cli_name](const Client& client){
+        return (cli_name.compare(client.name) == 0);
+    });
+    if ( found_client == clients.end()){
+        
+        return 3; //ClientUnknown
+    }
+    if (tables[stoi(cli_table)-1].free == true){
+        tables[stoi(cli_table)-1].free = false;
+        tables[stoi(cli_table)-1].acquire_time = prepare_time(time);
+        // освободить старый стол
+        if (found_client->table != -1) {
+            tables[found_client->table - 1].free = true;
+            int dur_cur = prepare_time(time) - tables[found_client->table - 1].acquire_time;
+            tables[found_client->table - 1].duration += dur_cur;
 
+            int hours = dur_cur / 60;
+            if (dur_cur % 60) hours += 1;
+            std::cout << "money: " << cost_per_hour * hours << std::endl;
+            std::cout << "dur: " << print_time(dur_cur) << std::endl;
+            tables[found_client->table - 1].earned_money += cost_per_hour * hours;
+        }
+        if (!queue_to_sit.empty() && queue_to_sit.front()->name == cli_name)
+        {
+            queue_to_sit.pop();
+        }
+
+        found_client->table=stoi(cli_table);
+    }
+    else 
+    {
+        return 4; //PlaceIsBusy
+    }
+    
+    return -1;
 }
-void CompClub::RemoveClient(const std::string & cli_left) {
 
+int CompClub::WaitForTable(const std::string &name, const std::string &time){
+    auto found_client = std::find_if(clients.begin(), clients.end(), [name](const Client& client){
+        return client.name == name;
+    });
+    for (const auto &table: tables){
+        if (table.free){
+            return 5; // ICanWaitNoLonger!
+        }
+    }
+    if (queue_to_sit.size() > this->tables_count ){
+        RemoveClient(name, time);
+        return 11; // ID 11 клиент ушел
+    }
+    else{
+        queue_to_sit.push(&(*found_client));
+    }
+    return -1;
+ }
+
+
+int CompClub::RemoveClient(const std::string & cli_left, const std::string &time) {
+    auto found_client = std::find_if(clients.begin(), clients.end(), [cli_left](const Client& client){
+    return client.name == cli_left;
+    });
+    if ( found_client == clients.end()){
+        return -3; //ClientUnknown
+    }
+    if (queue_to_sit.empty()){
+        tables[found_client->table-1].free = true;
+
+        int dur_cur = prepare_time(time) - tables[found_client->table - 1].acquire_time;
+        int hours = dur_cur / 60;
+        if (dur_cur % 60) hours += 1;
+        std::cout << "money: " << cost_per_hour * hours << std::endl;
+        std::cout << "dur: " << print_time(dur_cur) << std::endl;
+        tables[(found_client->table)-1].duration += dur_cur;
+        tables[found_client->table - 1].earned_money += cost_per_hour * hours;
+
+        clients.erase(found_client);
+    }
+    else{
+
+        int dur_cur = prepare_time(time) - tables[found_client->table - 1].acquire_time;
+        int hours = dur_cur / 60;
+        if (dur_cur % 60) hours += 1;
+        std::cout << "money: " << cost_per_hour * hours << std::endl;
+        std::cout << "dur: " << print_time(dur_cur) << std::endl;
+        tables[found_client->table - 1].earned_money += cost_per_hour * hours;
+        tables[(found_client->table)-1].duration += dur_cur;
+
+        queue_to_sit.front()->table = found_client->table;
+        tables[found_client->table - 1].acquire_time = prepare_time(time);
+        std::cout << time << " 12 " << queue_to_sit.front()->name << ' ' << queue_to_sit.front()->table << std::endl;
+        queue_to_sit.pop();
+        clients.erase(found_client);
+        return -2; // ID 12
+    }
+    
+    return -1;
 }
 void CompClub::Open(){
 
 }
 void CompClub::Close(){
-
+    std::sort(clients.begin(), clients.end(), [](const Client& client1, const Client& client2){
+    return client1.name < client2.name;
+    });
+    for (const auto &name: clients) {
+        std::cout << print_time(end_time) << " 11 " << name.name << std::endl;
+        RemoveClient(name.name, print_time(end_time));
+    }
+    std::cout << print_time(end_time) << std::endl;
+    for (const auto &table: tables) {
+        std::cout << table.earned_money << ' ' << print_time(table.duration) << std::endl;
+    }
 }
 
 CompClub::CompClub(std::string start_time, std::string end_time, int cost, int number_tables, Logger& logger) :
@@ -60,6 +168,7 @@ CompClub::CompClub(std::string start_time, std::string end_time, int cost, int n
     end_time(prepare_time(end_time)),
     cost_per_hour(cost),
     tables_count(number_tables),
+    tables(number_tables, Table()),
     logger(logger) 
     {
         isOpen = false;

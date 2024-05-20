@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -Wall --std=c++17
+CFLAGS=-c -Wall --std=c++17 -g3
 LDFLAGS=
 SOURCES=main.cpp CompClub.cpp Logger.cpp Table.cpp
 HEADERS=CompClub.h Logger.h Table.h
